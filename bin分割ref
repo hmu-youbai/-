@@ -1,0 +1,19 @@
+from Bio import SeqIO
+import math
+
+# 打开fasta文件
+fasta_file = "reference_genome.fasta"
+output_file = "reference_genome_1000bp_bins.bed"
+
+# 打开输出bed文件
+with open(output_file, "w") as out_file:
+    # 遍历fasta文件中的序列
+    for record in SeqIO.parse(fasta_file, "fasta"):
+        # 计算序列长度，然后将其分割成1000bp的bin
+        seq_len = len(record.seq)
+        num_bins = math.ceil(seq_len / 1000)
+        for i in range(num_bins):
+            start = i * 1000
+            end = min((i + 1) * 1000, seq_len)
+            bin_name = f"{record.id}_bin{i+1}"
+            out_file.write(f"{record.id}\t{start}\t{end}\t{bin_name}\n")
