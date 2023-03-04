@@ -1,0 +1,7 @@
+awk  -v OFS="\t" '{print $1,$2,$2,$4,$5}' CS |awk '$4 != 0 || $5 != 0'>wgbs
+//处理不符合标准格式的bed
+//提前排序对结果没有影响/可选
+awk  -v OFS="\t" '{print $1,$2,$3,$5,$6}' CS |awk '$4 != 0 || $5 != 0'|grep -v '^lambda' >wgbs
+
+
+
