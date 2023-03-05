@@ -1,29 +1,58 @@
 http://hgdownload.cse.ucsc.edu/goldenpath/mm10/liftOver/mm10ToMm9.over.chain.gz  
-liftOver input.bed mm10ToMm9.over.chain.gz output.bed unlifted.bed
-
-
+liftOver wgbs /home/wangzc/mm10ToMm9.over.chain.gz output.bed unlifted.bed
 
 awk  -v OFS="\t" '{print $1,$2,$2,$4,$5}' CS |awk '$4 != 0 || $5 != 0'>wgbs
-//处理不符合标准格式的bed
-//提前排序对结果没有影响/可选
+//处理不符合标准格式的bed     //提前排序对结果没有影响/可选
 awk  -v OFS="\t" '{print $1,$2,$3,$5,$6}' CS |awk '$4 != 0 || $5 != 0'|grep -v '^lambda' >wgbs
+//预处理结束，文件包含五列    （并且start=end）
 
 
-预处理结束，文件包含五列/////4+5=9 in new
+
+import sys
+if len(sys.argv) == 3:
+    file1 = sys.argv[1]
+    file2 = sys.argv[2]
+    print("第一个文件名：", file1)
+    print("第二个文件名：", file2)
+else:
+    print("请提供两个文件名作为参数。")
+    
+c1={}
+c2={}
+with open(file1,"r")as file1,open(file2,"r")as file2:
+    for line in file1:
+        line=line.strip()
+        line=line.split()
+        c1[line[0]+"\t"+line[1]+"\t"+line[2]]=line[3]+"\t"+line[4]
+
+    for line in file2:
+        line=line.strip()
+        line=line.split()
+        c2[line[0]+"\t"+line[1]+"\t"+line[2]]=line[3]+"\t"+line[4]
+intersection = c1.keys()&c2.keys()
+with open('result.bed', 'w') as f:
+    for key in intersection:
+        value1 = c1[key]
+        value2 = c2[key]
+        print(key+"\t"+value1+"\t"+value2,file=f)
+
+
+
+bedtools intersect -wo -a /home/wangzc/reference_1000_sort -b result.bed  > result.1000
+bedtools merge -i result.1000 -d -1 -c 8,9,10,11 -o sum,sum,sum,sum > over.bed
+
+
+//太繁琐，舍弃
 bedtools intersect -wo -a eee  -b output.bed  > all
 awk  -v OFS="\t" '{print $1,$2,$3,$4,$5}' all |sort|uniq  > all_1
 awk  -v OFS="\t" '{print $6,$7,$8,$9,$10}' all |sort|uniq  > all_2
 //两样本取交集完毕   //额外进行了去重
-//分别与ref1000取交集                  //这两步可以合并，以后补上
-
 bedtools intersect -wo -a /home/wangzc/reference_1000_sort -b all_1  > all_1.1000
 bedtools intersect -wo -a /home/wangzc/reference_1000_sort -b all_2  > all_2.1000
-
 bedtools merge -i all_1.1000 -d -1 -c 8,9 -o sum,sum > all_1.1000.bed
 bedtools merge -i all_2.1000 -d -1 -c 8,9 -o sum,sum > all_2.1000.bed
-
-
 bedtools intersect -wo -a all_1.1000.bed -b all_2.1000.bed  > overlap.bed
+
 
 
 
