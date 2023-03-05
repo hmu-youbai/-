@@ -42,22 +42,28 @@ bedtools intersect -wo -a /home/wangzc/reference_1000_sort -b result.bed  > resu
 bedtools merge -i result.1000 -d -1 -c 8,9,10,11 -o sum,sum,sum,sum > over.bed
 
 
-//太繁琐，舍弃
-bedtools intersect -wo -a eee  -b output.bed  > all
-awk  -v OFS="\t" '{print $1,$2,$3,$4,$5}' all |sort|uniq  > all_1
-awk  -v OFS="\t" '{print $6,$7,$8,$9,$10}' all |sort|uniq  > all_2
-//两样本取交集完毕   //额外进行了去重
-bedtools intersect -wo -a /home/wangzc/reference_1000_sort -b all_1  > all_1.1000
-bedtools intersect -wo -a /home/wangzc/reference_1000_sort -b all_2  > all_2.1000
-bedtools merge -i all_1.1000 -d -1 -c 8,9 -o sum,sum > all_1.1000.bed
-bedtools merge -i all_2.1000 -d -1 -c 8,9 -o sum,sum > all_2.1000.bed
-bedtools intersect -wo -a all_1.1000.bed -b all_2.1000.bed  > overlap.bed
 
 
 
+///////////////////////方法2        //开始的merge有问题
+bedtools sort -i eee >eee.sort
+bedtools merge -i eee.sort -d -1 -c 4,5 -o sum,sum > eee.merge
+
+bedtools intersect -a eee.merge -b wgbs11.merge  -wa | sort|uniq>  eee.over
+bedtools intersect -a /home/wangzc/reference_1000_sort -b eee.over -wo >eee.1000
+bedtools merge -i eee.1000 -d -1 -c 8,9 -o sum,sum > eee.sum
 
 
 
+bedtools sort -i output.bed >wgbs.sort
+bedtools merge -i wgbs.sort -d -1 -c 4,5 -o sum,sum > wgbs.merge
 
 
+bedtools intersect -a eee.merge -b wgbs11.merge  -wb | cut -f 6- |sort|uniq>  wgbs11.over
+bedtools intersect -a /home/wangzc/reference_1000_sort -b wgbs11.over -wo >wgbs11.1000
+bedtools merge -i wgbs11.1000 -d -1 -c 8,9 -o sum,sum > wgbs11.sum
 
+//似乎存在些问题
+bedtools groupby -i output.bed -g 1,2,3 -c 4,5 -o sum,sum > merged.bed  //没用
+bedtools intersect -f 1 -a eee -b output.bed -wa >all.a
+bedtools intersect -a eee -b output.bed  -wb | cut -f 6- |sort|uniq>  all.b
